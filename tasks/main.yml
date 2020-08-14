@@ -1,0 +1,38 @@
+---
+# tasks file for ansible-role-rsyslog
+- name: install rsyslog package
+  yum:
+    name:
+      - rsyslog
+  tags: rsyslog
+
+- name: edit config (sender)
+  lineinfile:
+    path: /etc/rsyslog.conf
+    regexp: '^.*\*\.\* @@'
+    line: '*.* @@{{ rsyslog_recive_host }}:{{ rsyslog_listen_port }}'
+  notify: restart rsyslog service
+  when: not rsyslog_is_reciver and rsyslog_recive_host
+  tags: rsyslog
+
+- name: edit config (reciver)
+  lineinfile:
+    path: /etc/rsyslog.conf
+    backrefs: yes
+    regexp: '{{ item.regexp }}'
+    line: '{{ item.line }}'
+  with_items:
+    - regexp: '^#(.*imtcp)$'
+      line: '\1'
+    - regexp: '^.*(\$InputTCPServerRun).*$'
+      line: '\1 {{ rsyslog_listen_port }}'
+  notify: restart rsyslog service
+  when: rsyslog_is_reciver or rsyslog_test is defined
+  tags: rsyslog
+
+- name: start rsyslog service
+  service:
+    name: rsyslog
+    state: started
+    enabled: yes
+  tags: rsyslog

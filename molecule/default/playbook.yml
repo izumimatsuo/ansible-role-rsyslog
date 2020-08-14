@@ -1,0 +1,8 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    rsyslog_recive_host: 'reciver-host'
+    rsyslog_test: yes
+  roles:
+    - role: ansible-role-rsyslog

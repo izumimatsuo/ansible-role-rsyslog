@@ -1,4 +1,4 @@
-# ansible-role-rsyslog
+# ansible-role-rsyslog [![Build Status](https://travis-ci.org/izumimatsuo/ansible-role-rsyslog.svg?branch=master)](https://travis-ci.org/izumimatsuo/ansible-role-rsyslog)
 
 CentOS7 に rsyslog を導入する ansible role です。
 

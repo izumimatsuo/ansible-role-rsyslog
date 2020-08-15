@@ -2,6 +2,8 @@
 
 CentOS7 に rsyslog を導入する ansible role です。
 
+- ```rsyslog_is_reciver``` と ```rsyslog_recive_host``` を設定することでリモート転送可能となる
+
 ## 設定項目
 
 以下の設定項目は上書き可能。

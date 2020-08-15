@@ -6,6 +6,15 @@
       - rsyslog
   tags: rsyslog
 
+- name: edit config (unlimited log burst)
+  lineinfile:
+    path: /etc/rsyslog.conf
+    regexp: '^$SystemLogRateLimitInterval'
+    insertbefore: '^#### GLOBAL DIRECTIVES ####'
+    line: '$SystemLogRateLimitInterval 0'
+  notify: restart rsyslog service
+  tags: rsyslog
+
 - block:
   - name: edit config (sender)
     lineinfile:
@@ -33,6 +42,15 @@
       line: '\1'
     - regexp: '^.*(\$InputTCPServerRun).*$'
       line: '\1 {{ rsyslog_listen_port }}'
+  notify: restart rsyslog service
+  when: rsyslog_is_reciver or rsyslog_test is defined
+  tags: rsyslog
+
+- name: copy recive log config
+  template:
+    src: recive_log.conf.j2
+    dest: /etc/rsyslog.d/recive_log.conf
+    mode: 0644
   notify: restart rsyslog service
   when: rsyslog_is_reciver or rsyslog_test is defined
   tags: rsyslog

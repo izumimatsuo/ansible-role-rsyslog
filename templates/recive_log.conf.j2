@@ -1,0 +1,4 @@
+$template RemoteHost, "/var/log/remote/%hostname%/%syslogfacility-text%.log"
+
+:fromhost-ip, !isequal, "127.0.0.1" -?RemoteHost
+& ~

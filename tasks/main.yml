@@ -6,12 +6,19 @@
       - rsyslog
   tags: rsyslog
 
-- name: edit config (sender)
-  lineinfile:
-    path: /etc/rsyslog.conf
-    regexp: '^.*\*\.\* @@'
-    line: '*.* @@{{ rsyslog_recive_host }}:{{ rsyslog_listen_port }}'
-  notify: restart rsyslog service
+- block:
+  - name: edit config (sender)
+    lineinfile:
+      path: /etc/rsyslog.conf
+      regexp: '^.*\*\.\* @@'
+      line: '*.* @@{{ rsyslog_recive_host }}:{{ rsyslog_listen_port }}'
+    notify: restart rsyslog service
+  - name: edit config (sender queue)
+    replace:
+      path: /etc/rsyslog.conf
+      regexp: '^#(\$Action[Queue|Resume].*)$'
+      replace: '\1'
+    notify: restart rsyslog service
   when: not rsyslog_is_reciver and rsyslog_recive_host
   tags: rsyslog
 

@@ -2,7 +2,7 @@
 - name: Converge
   hosts: all
   vars:
-    rsyslog_recive_host: 'reciver-host'
+    rsyslog_reciver_hostnames: ['reciver-1', 'reciver-2']
     rsyslog_test: yes
   roles:
     - role: ansible-role-rsyslog

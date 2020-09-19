@@ -1,5 +1,4 @@
 ---
 # defaults file for ansible-role-rsyslog
-rsyslog_is_reciver: no
-rsyslog_recive_host: ''
-rsyslog_listen_port: '514'
+rsyslog_reciver_listen_port: '514'
+rsyslog_reciver_hostnames:

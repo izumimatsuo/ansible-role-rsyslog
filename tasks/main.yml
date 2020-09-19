@@ -4,7 +4,6 @@
   yum:
     name:
       - rsyslog
-  tags: rsyslog
 
 - name: edit config (unlimited log burst)
   lineinfile:
@@ -13,23 +12,22 @@
     insertbefore: '^#### GLOBAL DIRECTIVES ####'
     line: '$SystemLogRateLimitInterval 0'
   notify: restart rsyslog service
-  tags: rsyslog
 
-- block:
-  - name: edit config (sender)
-    lineinfile:
-      path: /etc/rsyslog.conf
-      regexp: '^.*\*\.\* @@'
-      line: '*.* @@{{ rsyslog_recive_host }}:{{ rsyslog_listen_port }}'
-    notify: restart rsyslog service
-  - name: edit config (sender queue)
-    replace:
-      path: /etc/rsyslog.conf
-      regexp: '^#(\$Action[Queue|Resume].*)$'
-      replace: '\1'
-    notify: restart rsyslog service
-  when: not rsyslog_is_reciver and rsyslog_recive_host
-  tags: rsyslog
+- name: edit config (sender)
+  blockinfile:
+    path: /etc/rsyslog.conf
+    insertbefore: '^# ### end of the forwarding rule ###'
+    block: |
+      $ActionQueueFileName fwdRule{{ item.0 }}
+      $ActionQueueMaxDiskSpace 1g
+      $ActionQueueSaveOnShutdown on
+      $ActionQueueType LinkedList
+      $ActionResumeRetryCount -1
+      *.* @@{{ hostvars[item.1]['ansible_host'] if hostvars[item.1] is defined else item.1 }}:{{ rsyslog_reciver_listen_port }}
+    marker: '# {mark} ANSIBLE MANAGED BLOCK {{ item.0 }}'
+  with_indexed_items: '{{ rsyslog_reciver_hostnames }}'
+  notify: restart rsyslog service
+  when: rsyslog_reciver_hostnames != None
 
 - name: edit config (reciver)
   lineinfile:
@@ -41,10 +39,9 @@
     - regexp: '^#(.*imtcp)$'
       line: '\1'
     - regexp: '^.*(\$InputTCPServerRun).*$'
-      line: '\1 {{ rsyslog_listen_port }}'
+      line: '\1 {{ rsyslog_reciver_listen_port }}'
   notify: restart rsyslog service
-  when: rsyslog_is_reciver or rsyslog_test is defined
-  tags: rsyslog
+  when: rsyslog_reciver_hostnames != None and inventory_hostname in rsyslog_reciver_hostnames or rsyslog_test is defined
 
 - name: copy recive log config
   template:
@@ -52,12 +49,10 @@
     dest: /etc/rsyslog.d/recive_log.conf
     mode: 0644
   notify: restart rsyslog service
-  when: rsyslog_is_reciver or rsyslog_test is defined
-  tags: rsyslog
+  when: rsyslog_reciver_hostnames != None and inventory_hostname in rsyslog_reciver_hostnames or rsyslog_test is defined
 
 - name: start rsyslog service
   service:
     name: rsyslog
     state: started
     enabled: yes
-  tags: rsyslog
